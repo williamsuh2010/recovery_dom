@@ -1,0 +1,14 @@
+# Recovery DOM GRUB Early Config (embedded in GRUB binary)
+# UUID placeholders (@@...@@) are replaced at install/post-dd time
+
+search --fs-uuid @@BOOT_A_UUID@@ --set=root
+if [ -f /grub/grub.cfg ]; then
+    configfile /grub/grub.cfg
+else
+    search --fs-uuid @@BOOT_B_UUID@@ --set=root
+    if [ -f /grub/grub.cfg ]; then
+        configfile /grub/grub.cfg
+    else
+        echo "boot_A and boot_B both failed"
+    fi
+fi

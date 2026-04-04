@@ -1,0 +1,15 @@
+[Unit]
+Description=NVR Recovery DOM Phase 2 Setup (one-time)
+After=network-online.target
+Wants=network-online.target
+ConditionPathExists=/root/recovery_dom/setup_phase2.sh
+
+[Service]
+Type=oneshot
+ExecStart=/bin/bash /root/recovery_dom/setup_phase2.sh
+StandardOutput=journal+console
+StandardError=journal+console
+TimeoutStartSec=0
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,13 @@
+[Unit]
+Description=Failover health check and boot success marker
+After=multi-user.target
+
+[Service]
+Type=oneshot
+ExecStartPre=/bin/sleep 600
+ExecStart=/usr/local/sbin/failover-success.sh
+TimeoutStartSec=1800
+RemainAfterExit=no
+
+[Install]
+WantedBy=multi-user.target

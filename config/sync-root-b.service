@@ -1,0 +1,8 @@
+[Unit]
+Description=Weekly rsync root_A to root_B
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/sync-root.sh B
+Nice=19
+IOSchedulingClass=idle

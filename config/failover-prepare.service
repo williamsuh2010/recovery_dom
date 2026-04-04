@@ -1,0 +1,12 @@
+[Unit]
+Description=Failover boot slot logging
+DefaultDependencies=no
+After=local-fs.target
+Before=multi-user.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/failover-preboot.sh
+
+[Install]
+WantedBy=multi-user.target

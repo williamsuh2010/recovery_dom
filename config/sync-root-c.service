@@ -1,0 +1,8 @@
+[Unit]
+Description=Monthly rsync root_A to root_C
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/sync-root.sh C
+Nice=19
+IOSchedulingClass=idle

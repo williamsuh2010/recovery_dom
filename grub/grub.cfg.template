@@ -1,0 +1,57 @@
+# Recovery DOM GRUB Configuration
+# UUID placeholders (@@...@@) are replaced at install time
+
+load_env
+
+# Initialize variables if not set
+if [ -z "${boot_try}" ]; then
+    set boot_try=A
+fi
+if [ -z "${boot_ok}" ]; then
+    set boot_ok=0
+fi
+if [ -z "${retry_round}" ]; then
+    set retry_round=0
+fi
+
+# If previous boot was NOT successful, advance to next slot
+if [ "${boot_ok}" != "1" ]; then
+    if [ "${boot_try}" = "A" ]; then set boot_try=B;
+    elif [ "${boot_try}" = "B" ]; then set boot_try=C;
+    elif [ "${boot_try}" = "C" ]; then set boot_try=D;
+    elif [ "${boot_try}" = "D" ]; then
+        if [ "${retry_round}" = "0" ]; then
+            set retry_round=1
+            set boot_try=A
+        else
+            set boot_try=HALT
+        fi
+    fi
+fi
+
+# Record this attempt (not yet successful)
+set boot_ok=0
+save_env boot_try boot_ok retry_round
+
+# Boot the selected slot
+if [ "${boot_try}" = "A" ]; then
+    set root_uuid=@@ROOT_A_UUID@@
+elif [ "${boot_try}" = "B" ]; then
+    set root_uuid=@@ROOT_B_UUID@@
+elif [ "${boot_try}" = "C" ]; then
+    set root_uuid=@@ROOT_C_UUID@@
+elif [ "${boot_try}" = "D" ]; then
+    set root_uuid=@@ROOT_D_UUID@@
+elif [ "${boot_try}" = "HALT" ]; then
+    echo ""
+    echo "============================================"
+    echo "  ALL SLOTS FAILED - SYSTEM HALTED"
+    echo "  Replace DOM or boot from USB"
+    echo "============================================"
+    echo ""
+    sleep 999999
+fi
+
+linux /vmlinuz-linux root=UUID=${root_uuid} rw panic=10
+initrd /intel-ucode.img /initramfs-linux.img
+boot
