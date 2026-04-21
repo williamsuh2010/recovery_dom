@@ -173,6 +173,14 @@ systemctl is-enabled sync-root-b.timer || warn "sync-root-b.timer not enabled"
 systemctl is-enabled sync-root-c.timer || warn "sync-root-c.timer not enabled"
 systemctl is-enabled check-smart.timer || warn "check-smart.timer not enabled"
 
+# ── Blacklist intel_oc_wdt (legacy /dev/watchdog must bind to iTCO_wdt) ──
+# Kernel 6.19+ loads intel_oc_wdt as watchdog0; the app opens /dev/watchdog
+# (misc 10:130) without magic-close, triggering hardware reset on app exit.
+# Blacklisting makes iTCO_wdt the primary watchdog, matching prior devices.
+cat > /etc/modprobe.d/blacklist-intel_oc_wdt.conf <<'WDTEOF'
+blacklist intel_oc_wdt
+WDTEOF
+
 # ── Disable Phase 2 service ──
 systemctl disable nvr-setup.service
 
