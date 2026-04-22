@@ -86,9 +86,18 @@ EOF
 
 # ── Build custom GRUB binary ──
 info "Building GRUB binary with embedded early.cfg..."
-grub-mkimage -d /usr/lib/grub/x86_64-efi -c /tmp/early.cfg \
-    -o /tmp/grubx64.efi -O x86_64-efi \
-    part_gpt ext2 fat normal search search_fs_uuid configfile loadenv linux echo
+info "grub-mkimage version: $(grub-mkimage --version 2>&1 || true)"
+info "Module dir contents: $(ls /usr/lib/grub/x86_64-efi/*.mod 2>&1 | wc -l) modules"
+info "early.cfg contents:"
+cat /tmp/early.cfg
+
+grub-mkimage \
+    --directory=/usr/lib/grub/x86_64-efi \
+    --config=/tmp/early.cfg \
+    --output=/tmp/grubx64.efi \
+    --format=x86_64-efi \
+    --prefix=/grub \
+    part_gpt ext2 fat normal search search_fs_uuid configfile loadenv linux echo test
 check "grub-mkimage failed"
 
 # ── Install GRUB binary to EFI_A ──
@@ -101,24 +110,20 @@ check "GRUB binary copy failed"
 info "Generating grub.cfg..."
 mkdir -p /boot/grub
 cat > /boot/grub/grub.cfg <<'GRUBEOF'
-load_env
+set boot_try=A
+set boot_ok=0
+set retry_round=0
+load_env -f /grub/grubenv
 
-if [ -z "${boot_try}" ]; then
-    set boot_try=A
-fi
-if [ -z "${boot_ok}" ]; then
-    set boot_ok=0
-fi
-if [ -z "${retry_round}" ]; then
-    set retry_round=0
-fi
-
-if [ "${boot_ok}" != "1" ]; then
-    if [ "${boot_try}" = "A" ]; then set boot_try=B;
-    elif [ "${boot_try}" = "B" ]; then set boot_try=C;
-    elif [ "${boot_try}" = "C" ]; then set boot_try=D;
-    elif [ "${boot_try}" = "D" ]; then
-        if [ "${retry_round}" = "0" ]; then
+if [ "$boot_ok" != "1" ] ; then
+    if [ "$boot_try" = "A" ] ; then
+        set boot_try=B
+    elif [ "$boot_try" = "B" ] ; then
+        set boot_try=C
+    elif [ "$boot_try" = "C" ] ; then
+        set boot_try=D
+    elif [ "$boot_try" = "D" ] ; then
+        if [ "$retry_round" = "0" ] ; then
             set retry_round=1
             set boot_try=A
         else
@@ -128,30 +133,26 @@ if [ "${boot_ok}" != "1" ]; then
 fi
 
 set boot_ok=0
-save_env boot_try boot_ok retry_round
+save_env -f /grub/grubenv boot_try boot_ok retry_round
 
 GRUBEOF
 
 cat >> /boot/grub/grub.cfg <<EOF
-if [ "\${boot_try}" = "A" ]; then
+if [ "\$boot_try" = "A" ] ; then
     set root_uuid=${ROOT_A_UUID}
-elif [ "\${boot_try}" = "B" ]; then
+elif [ "\$boot_try" = "B" ] ; then
     set root_uuid=${ROOT_B_UUID}
-elif [ "\${boot_try}" = "C" ]; then
+elif [ "\$boot_try" = "C" ] ; then
     set root_uuid=${ROOT_C_UUID}
-elif [ "\${boot_try}" = "D" ]; then
+elif [ "\$boot_try" = "D" ] ; then
     set root_uuid=${ROOT_D_UUID}
-elif [ "\${boot_try}" = "HALT" ]; then
-    echo ""
-    echo "============================================"
-    echo "  ALL SLOTS FAILED - SYSTEM HALTED"
-    echo "  Replace DOM or boot from USB"
-    echo "============================================"
-    echo ""
+elif [ "\$boot_try" = "HALT" ] ; then
+    echo "ALL SLOTS FAILED - SYSTEM HALTED"
+    echo "Replace DOM or boot from USB"
     sleep 999999
 fi
 
-linux /vmlinuz-linux root=UUID=\${root_uuid} rw panic=10
+linux /vmlinuz-linux root=UUID=\$root_uuid rw panic=10 systemd.setenv=SYSTEMD_SECCOMP=0
 initrd /intel-ucode.img /initramfs-linux.img
 boot
 EOF
@@ -159,7 +160,7 @@ EOF
 # ── Initialize grubenv ──
 info "Initializing grubenv..."
 grub-editenv /boot/grub/grubenv create
-grub-editenv /boot/grub/grubenv set boot_try=A boot_ok=0 retry_round=0
+grub-editenv /boot/grub/grubenv set boot_try=A boot_ok=1 retry_round=0
 
 # ── Register UEFI boot entries ──
 info "Registering UEFI boot entries..."
@@ -199,9 +200,19 @@ info "Configuring watchdog..."
 mkdir -p /etc/sysctl.d
 echo "kernel.panic = 10" > /etc/sysctl.d/99-panic.conf
 
-# systemd watchdog
-sed -i 's/^#RuntimeWatchdogSec=.*/RuntimeWatchdogSec=20/' /etc/systemd/system.conf
+# systemd watchdog — 설치 중에는 비활성화 (Phase 3 완료 후 활성화)
+# nowayout 특성: 한번 /dev/watchdog을 열면 끌 수 없으므로
+# 설치가 완전히 끝나기 전에 활성화하면 안 됨
+sed -i 's/^#RuntimeWatchdogSec=.*/RuntimeWatchdogSec=0/' /etc/systemd/system.conf
 sed -i 's/^#RebootWatchdogSec=.*/RebootWatchdogSec=30/' /etc/systemd/system.conf
+
+# ── systemd generator sandbox 호환성 (seccomp Protocol error 방지) ──
+mkdir -p /etc/systemd/system.conf.d/
+cat > /etc/systemd/system.conf.d/no-sandbox.conf <<'SBOXEOF'
+[Manager]
+ManagerEnvironment=SYSTEMD_SECCOMP=0
+SBOXEOF
+info "systemd seccomp disabled via ManagerEnvironment"
 
 # ── Generate slot-uuids.conf ──
 info "Generating slot-uuids.conf..."

@@ -134,8 +134,10 @@ sleep 1
 info "Formatting..."
 mkfs.fat -F 32 "$PART_EFI_A"
 mkfs.fat -F 32 "$PART_EFI_B"
-mkfs.ext4 -F "$PART_BOOT_A"
-mkfs.ext4 -F "$PART_BOOT_B"
+# boot 파티션은 GRUB save_env 호환을 위해 ext2로 포맷
+# (ext4의 metadata_csum/64bit 기능이 GRUB 쓰기를 방해함)
+mkfs.ext2 -F "$PART_BOOT_A"
+mkfs.ext2 -F "$PART_BOOT_B"
 mkswap "$PART_SWAP"
 mkfs.ext4 -F "$PART_ROOT_A"
 mkfs.ext4 -F "$PART_ROOT_B"
@@ -155,6 +157,13 @@ mount "$PART_EFI_A" /mnt/boot/efi
 # ── Pre-create vconsole.conf ──
 mkdir -p /mnt/etc
 echo "KEYMAP=us" > /mnt/etc/vconsole.conf
+
+# ── Set Arch archive snapshot mirror (freeze package versions) ──
+if [ -n "${AWESOME_SNAPSHOT}" ]; then
+    info "Using Arch archive snapshot: ${AWESOME_SNAPSHOT}"
+    echo "Server = https://archive.archlinux.org/repos/${AWESOME_SNAPSHOT}/\$repo/os/\$arch" > /etc/pacman.d/mirrorlist
+    pacman -Syy
+fi
 
 # ── Install base system ──
 info "Installing base system... (takes several minutes)"
