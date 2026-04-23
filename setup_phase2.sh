@@ -51,16 +51,15 @@ EOF
     done
     systemctl mask autovt@.service 2>/dev/null || true
 
-    for pkg in termite xterm alacritty foot konsole gnome-terminal xfce4-terminal; do
-        pacman -Rns --noconfirm "$pkg" 2>/dev/null || true
-    done
-
     if is_enabled "${TTA_CERTIFICATION_DEBUG:-0}"; then
-        info "TTA debug mode: sshd remains enabled for verification."
+        info "TTA debug mode: sshd and local terminal packages remain enabled for verification."
     else
+        for pkg in termite xterm alacritty foot konsole gnome-terminal xfce4-terminal; do
+            pacman -Rns --noconfirm "$pkg" 2>/dev/null || true
+        done
         systemctl disable --now sshd 2>/dev/null || true
         systemctl mask sshd 2>/dev/null || true
-        info "TTA final mode: sshd disabled."
+        info "TTA final mode: sshd and local terminal packages disabled."
     fi
 }
 
@@ -68,9 +67,11 @@ info "========== Phase 2 start =========="
 info "$(date)"
 
 TERMINAL_PACKAGES="xterm"
-if is_enabled "${TTA_CERTIFICATION:-0}"; then
+if is_enabled "${TTA_CERTIFICATION:-0}" && ! is_enabled "${TTA_CERTIFICATION_DEBUG:-0}"; then
     TERMINAL_PACKAGES=""
-    info "TTA certification mode: terminal packages will not be installed."
+    info "TTA final mode: terminal packages will not be installed."
+elif is_enabled "${TTA_CERTIFICATION:-0}" && is_enabled "${TTA_CERTIFICATION_DEBUG:-0}"; then
+    info "TTA debug mode: xterm will be installed and termite will be built."
 fi
 
 # ── Disable failover during installation ──
@@ -217,8 +218,8 @@ if ! grep -q "pam_limits.so" /etc/pam.d/su; then
     echo "session    required   pam_limits.so" >> /etc/pam.d/su
 fi
 
-if is_enabled "${TTA_CERTIFICATION:-0}"; then
-    info "TTA certification mode: skipping termite terminal build."
+if is_enabled "${TTA_CERTIFICATION:-0}" && ! is_enabled "${TTA_CERTIFICATION_DEBUG:-0}"; then
+    info "TTA final mode: skipping termite terminal build."
 else
     # ── Build termite from AUR ──
     info "Building termite from AUR..."
