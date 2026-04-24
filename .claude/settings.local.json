@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(gh repo:*)",
+      "WebSearch",
+      "WebFetch(domain:archlinux.org)",
+      "WebFetch(domain:archive.archlinux.org)",
+      "Read(//c/dnvr2/app/**)",
+      "Read(//root/**)",
+      "Read(//c/dnvr2/**)"
+    ],
+    "additionalDirectories": [
+      "E:\\claude-code\\dome_install\\make_dom"
+    ]
+  }
+}
