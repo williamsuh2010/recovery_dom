@@ -1,0 +1,8 @@
+# Debug/diagnostic photos and folders
+IMG_*.JPG
+IMG_*.jpg
+fail/
+
+# Claude Code per-user / auto-generated settings
+.claude/settings.local.json
+.claude/settings.json
