@@ -3,7 +3,11 @@ Description=Weekly root_B sync timer
 
 [Timer]
 OnCalendar=Sun *-*-* 03:00:00
-Persistent=true
+# Persistent=true 의도적으로 미사용:
+# 점검 등으로 시스템이 꺼져있어 예약 시각을 놓친 경우, 부팅 직후 즉시 rsync가
+# 시작되면 DNVR 초기화 / health check 10분 동안의 디스크 I/O 부하가 겹쳐
+# health check 실패(PID 불안정 판정) 위험이 있음. 놓친 회차는 그냥 건너뛰고
+# 다음 일요일 03:00 회차에 수행.
 
 [Install]
 WantedBy=timers.target
