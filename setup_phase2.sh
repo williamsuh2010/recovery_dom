@@ -62,6 +62,42 @@ EOF
         info "TTA final mode: sshd and local terminal packages disabled."
     fi
 }
+install_dashboard_node_support() {
+    if ! is_enabled "${ENABLE_DASHBOARD_NODE:-0}"; then
+        return
+    fi
+
+    info "Installing Dashboard Node support..."
+    pacman -S --noconfirm --needed docker docker-compose curl
+    check "Dashboard Node package installation failed"
+
+    systemctl enable docker
+
+    mkdir -p "${DASHBOARD_NODE_DIR:-/opt/nvr-dashboard}"
+    mkdir -p /var/lib/nvr-dashboard
+    mkdir -p /var/log/nvr-dashboard
+
+    cat > /etc/systemd/system/nvr-dashboard-node.service <<EOF
+[Unit]
+Description=NVR Dashboard Node Stack
+After=network-online.target docker.service
+Wants=network-online.target docker.service
+
+[Service]
+Type=oneshot
+WorkingDirectory=${DASHBOARD_NODE_DIR:-/opt/nvr-dashboard}
+ExecStart=/usr/bin/docker compose up -d
+ExecStop=/usr/bin/docker compose down
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+    info "Dashboard Node support installed."
+    info "Copy dashboard project files to ${DASHBOARD_NODE_DIR:-/opt/nvr-dashboard}"
+    info "Enable after files are ready: systemctl enable --now nvr-dashboard-node.service"
+}
 
 info "========== Phase 2 start =========="
 info "$(date)"
@@ -158,6 +194,8 @@ pacman -S --noconfirm --needed \
     zeromq nlohmann-json cppzmq \
     mpv chromium
 check "Package installation failed"
+
+install_dashboard_node_support
 
 # ── Enable sshd ──
 info "Enabling services..."
