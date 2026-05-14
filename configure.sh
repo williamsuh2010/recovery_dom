@@ -234,6 +234,13 @@ EOF
 # ── Create recovery state directory ──
 mkdir -p /var/lib/recovery
 
+# ── Recovery DOM 식별 마커 ──
+# DNVR 등 상위 컴포넌트가 atomic 업그레이드 적용 여부를 결정하는 신호.
+# 적용 조건: TTA_CERTIFICATION 빌드 OR 이 마커 존재 (recovery DOM).
+# 현장 일반 DOM 에는 이 파일이 없으므로 atomic 업그레이드를 적용하지 않고
+# 기존 single-mount 레이아웃을 유지해야 함.
+touch /etc/recovery/is_recovery_dom
+
 # ── Install failover scripts ──
 info "Installing failover scripts..."
 cp /root/recovery_dom/scripts/failover-preboot.sh /usr/local/sbin/

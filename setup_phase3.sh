@@ -77,10 +77,15 @@ check "tgtmnt copy failed"
 cp /mnt/root/.bash_profile /root/
 check ".bash_profile copy failed"
 
-# Add ldconfig after tgtmnt in .bash_profile (refresh cache after ecryptfs mount)
+# 옛 DOM 종류에 따라 .bash_profile 이 tgtmnt 또는 tgtmnt2 를 호출할 수 있음.
+# tgtmnt2 로 통일 (단어 경계 \b 로 tgtmnt2 → tgtmnt22 사고 방지).
+sed -i 's/\btgtmnt\b/tgtmnt2/g' /root/.bash_profile
+info ".bash_profile normalized to call tgtmnt2"
+
+# Add ldconfig after tgtmnt2 in .bash_profile (refresh cache after ecryptfs mount)
 if ! grep -q "ldconfig" /root/.bash_profile; then
-    sed -i '/tgtmnt/a\        ldconfig' /root/.bash_profile
-    info "Added ldconfig after tgtmnt in .bash_profile"
+    sed -i '/tgtmnt2/a\        ldconfig' /root/.bash_profile
+    info "Added ldconfig after tgtmnt2 in .bash_profile"
 fi
 cp -r /mnt/root/.config /root/
 check ".config copy failed"
@@ -290,7 +295,8 @@ clone_slot() {
         --exclude=/tmp \
         --exclude=/run \
         --exclude=/mnt \
-        --exclude=/root/tgtdnvr
+        --exclude=/root/tgtdnvr \
+        --exclude=/root/tgt_dec
 
     umount "$MNT"
     rmdir "$MNT" 2>/dev/null

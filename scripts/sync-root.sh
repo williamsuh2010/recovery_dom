@@ -53,7 +53,8 @@ rsync -aAX --delete / "$MOUNT_POINT/" \
     --exclude=/tmp \
     --exclude=/run \
     --exclude=/mnt \
-    --exclude=/root/tgtdnvr
+    --exclude=/root/tgtdnvr \
+    --exclude=/root/tgt_dec
 
 RSYNC_RESULT=$?
 
