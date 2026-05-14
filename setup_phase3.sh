@@ -87,6 +87,14 @@ if ! grep -q "ldconfig" /root/.bash_profile; then
     sed -i '/tgtmnt2/a\        ldconfig' /root/.bash_profile
     info "Added ldconfig after tgtmnt2 in .bash_profile"
 fi
+
+# atomic 업그레이드 self-heal 호출 보장 (옛 DOM 의 .bash_profile 에 이 줄이 없을 수 있음).
+# sed a\ 가 tgtmnt2 직후에 삽입하므로 최종 순서는 tgtmnt2 → dnvr-apply-config.sh → ldconfig.
+# 스크립트 자체에 mountpoint/xinitrc 안전장치가 있어 legacy 환경에선 자동 ABORT.
+if ! grep -q "dnvr-apply-config" /root/.bash_profile; then
+    sed -i '/tgtmnt2/a\        /root/tgtdnvr/dnvr-apply-config.sh' /root/.bash_profile
+    info "Added dnvr-apply-config.sh call after tgtmnt2 in .bash_profile"
+fi
 cp -r /mnt/root/.config /root/
 check ".config copy failed"
 cp /mnt/etc/ld.so.conf.d/tgt.conf /etc/ld.so.conf.d/
