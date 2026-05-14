@@ -170,6 +170,10 @@ efibootmgr --create --disk "$TARGET_DISK" --part 2 --label "Recovery DOM (backup
 # ── Regenerate initramfs ──
 info "Regenerating initramfs..."
 [ -f /etc/vconsole.conf ] || echo "KEYMAP=us" > /etc/vconsole.conf
+# autodetect 는 install 시점 로드된 블록 드라이버만 포함하므로,
+# 마스터 이미지를 다른 버스 타입(NVMe↔SATA) DOM 에 dd 클론하면
+# initramfs 가 새 디스크를 못 찾아 부팅 실패함. 양쪽 다 명시 포함.
+sed -i 's|^MODULES=.*|MODULES=(nvme nvme_core ahci sd_mod)|' /etc/mkinitcpio.conf
 mkinitcpio -P
 check "mkinitcpio failed"
 
@@ -273,5 +277,10 @@ touch /var/log/failover.log
 
 # ── Cleanup ──
 rm -f /tmp/early.cfg /tmp/grubx64.efi
+
+# partinfo.env 는 install 1회용. 잔존 시 dd 클론된 다른 타입(NVMe↔SATA)
+# DOM에서 누군가 configure.sh를 재실행하면 마스터의 디바이스 경로로
+# GRUB을 재빌드해 부팅 불능이 됨 → 흔적 자체를 남기지 않는다.
+rm -f /root/recovery_dom/partinfo.env
 
 info "configure.sh done"
