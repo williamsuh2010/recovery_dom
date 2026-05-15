@@ -248,6 +248,18 @@ LIBDC_REAL=$(ls libdc1394.so.*.*.* 2>/dev/null | head -1)
 info "Library count in ${LIBDEST}: $(ls -1 ${LIBDEST}/ | wc -l) files"
 cd /
 
+# ── tgtmnt2 binary 를 ecryptfs 저장소에도 배치 ──
+# /usr/bin/tgtmnt2 는 Phase 2 가 이미 배치. 여기서는 ecryptfs 마운트 (/root/tgtdnvr)
+# 안에도 사본을 둠 → 첫 부팅 시 tgtmnt2 가 v_current/ 로 마이그레이션 → 이후
+# 업그레이드/apply-config 가 이 사본을 참조해 /usr/bin/tgtmnt2 를 동기화 가능.
+if [ -f /root/recovery_dom/tgtmnt2 ]; then
+    cp /root/recovery_dom/tgtmnt2 /root/tgtdnvr/tgtmnt2
+    chmod 755 /root/tgtdnvr/tgtmnt2
+    info "tgtmnt2 placed in encrypted store: /root/tgtdnvr/tgtmnt2"
+else
+    warn "tgtmnt2 binary not found at /root/recovery_dom/tgtmnt2 (Phase 2 should have caught this)"
+fi
+
 # ── Unmount old DOM ──
 umount /mnt
 info "Old DOM unmounted"

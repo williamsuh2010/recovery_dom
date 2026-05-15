@@ -206,6 +206,19 @@ mkdir -p /root/tgt
 mkdir -p /root/tgtdnvr
 mkdir -p /var/lib/recovery
 
+# ── tgtmnt2 binary 배치 ──
+# recovery DOM 부팅 시 .bash_profile 이 호출하는 ecryptfs+bind mount 도구.
+# 옛 DOM 에서 가져오지 않고 recovery_dom 패키지에 포함된 binary 를 사용.
+# Phase 3 후 첫 부팅에서 .bash_profile 이 호출하므로 그 전에 PATH 에 있어야 함.
+# Windows 소스에는 exec bit 없으므로 chmod 필수.
+if [ -f /root/recovery_dom/tgtmnt2 ]; then
+    cp /root/recovery_dom/tgtmnt2 /usr/bin/tgtmnt2
+    chmod 755 /usr/bin/tgtmnt2
+    info "tgtmnt2 installed: $(ls -la /usr/bin/tgtmnt2 | awk '{print $1, $5}')"
+else
+    error "tgtmnt2 binary not found at /root/recovery_dom/tgtmnt2"
+fi
+
 # ── netplan setup ──
 info "Setting up netplan..."
 mkdir -p /etc/netplan
