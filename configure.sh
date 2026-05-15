@@ -249,12 +249,14 @@ cp /root/recovery_dom/scripts/sync-root.sh /usr/local/sbin/
 cp /root/recovery_dom/scripts/upgrade-sync-d.sh /usr/local/sbin/
 cp /root/recovery_dom/scripts/check-smart.sh /usr/local/sbin/
 cp /root/recovery_dom/scripts/switch-slot.sh /usr/local/sbin/
+cp /root/recovery_dom/scripts/mark-installed.sh /usr/local/sbin/
 chmod 755 /usr/local/sbin/failover-preboot.sh
 chmod 755 /usr/local/sbin/failover-success.sh
 chmod 755 /usr/local/sbin/sync-root.sh
 chmod 755 /usr/local/sbin/upgrade-sync-d.sh
 chmod 755 /usr/local/sbin/check-smart.sh
 chmod 755 /usr/local/sbin/switch-slot.sh
+chmod 755 /usr/local/sbin/mark-installed.sh
 
 # ── Install systemd services ──
 info "Installing systemd services..."

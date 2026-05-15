@@ -366,6 +366,12 @@ info " After reboot:"
 info "   Ctrl+F12 to verify tgtdnvr mount"
 info "   Ready for dd image backup"
 info "   After dd: run post-dd-uuid-regen.sh"
+info " "
+info " IMPORTANT — manual app install workflow:"
+info "   If you install DNVR app manually before failover-success completes"
+info "   (~20min after boot), run before reboot:"
+info "     /usr/local/sbin/mark-installed.sh"
+info "   Otherwise GRUB will advance to next slot on reboot."
 info "=========================================="
 
 beep -f 1500 -l 500 2>/dev/null || true
