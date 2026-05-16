@@ -22,6 +22,10 @@ mark_boot_ok_and_sync_d() {
     mount /boot 2>/dev/null || mount "$(grep '/boot' /etc/fstab | awk '{print $1}' | head -1)" /boot
     grub-editenv /boot/grub/grubenv set boot_ok=1 retry_round=0
     umount /boot
+    # config 빠른 propagation (작은 파일들 atomic 복사) — boot_ok 마킹 시점의
+    # 최신 설정을 B/C/D 에 즉시 push. 슬롯 전환 시 설정 손실 최소화.
+    /usr/local/sbin/sync-config.sh
+    # D 슬롯 전체 동기화 (DNVR 업그레이드 후에만 작동, 플래그 기반)
     /usr/local/sbin/upgrade-sync-d.sh
 }
 
