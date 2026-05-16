@@ -252,6 +252,7 @@ cp /root/recovery_dom/scripts/switch-slot.sh /usr/local/sbin/
 cp /root/recovery_dom/scripts/mark-installed.sh /usr/local/sbin/
 cp /root/recovery_dom/scripts/enter-maintenance.sh /usr/local/sbin/
 cp /root/recovery_dom/scripts/exit-maintenance.sh /usr/local/sbin/
+cp /root/recovery_dom/scripts/sync-all-slots.sh /usr/local/sbin/
 chmod 755 /usr/local/sbin/failover-preboot.sh
 chmod 755 /usr/local/sbin/failover-success.sh
 chmod 755 /usr/local/sbin/sync-root.sh
@@ -261,6 +262,7 @@ chmod 755 /usr/local/sbin/switch-slot.sh
 chmod 755 /usr/local/sbin/mark-installed.sh
 chmod 755 /usr/local/sbin/enter-maintenance.sh
 chmod 755 /usr/local/sbin/exit-maintenance.sh
+chmod 755 /usr/local/sbin/sync-all-slots.sh
 
 # ── Install systemd services ──
 info "Installing systemd services..."
