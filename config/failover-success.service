@@ -4,7 +4,8 @@ After=multi-user.target
 
 [Service]
 Type=oneshot
-ExecStartPre=/bin/sleep 600
+# sleep 은 스크립트 안으로 이동됨 (install_mode/maintenance_mode 검사는 즉시,
+# DNVR PID 검사만 sleep 후 진행). 이렇게 해야 flag 보호가 부팅 직후부터 유효.
 ExecStart=/usr/local/sbin/failover-success.sh
 TimeoutStartSec=1800
 RemainAfterExit=no

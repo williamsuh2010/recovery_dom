@@ -60,6 +60,13 @@ if [ -f "$MAINTENANCE_FLAG" ]; then
     fi
 fi
 
+# flag 없음 (production) → DNVR 초기화 시간 대기 후 검사 시작.
+# (예전엔 service ExecStartPre=sleep 600 으로 처리. 그 경우 install_mode/maintenance_mode
+# 검사도 sleep 후에야 동작 → 부팅 직후 10분 동안 flag 보호 무효. 그래서 sleep 을 여기로
+# 이동: flag 검사는 service 시작 즉시, DNVR 검사만 sleep.)
+echo "$(date '+%Y-%m-%d %H:%M:%S') no flag — waiting ${HEALTH_CHECK_PID_WAIT}s for DNVR to settle before sampling" >> "$FAILOVER_LOG"
+sleep "$HEALTH_CHECK_PID_WAIT"
+
 # DNVR 프로세스 PID 확인 (시작 시점)
 pid=$(pgrep -f "DNVR_va|DNVR" | head -1)
 if [ -z "$pid" ]; then
