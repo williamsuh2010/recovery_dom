@@ -83,12 +83,21 @@ sync-config.sh B       # B 만
 
 ### 2.3 dd 클론
 
-#### `post-dd-uuid-regen.sh`
+#### `post-dd-uuid-regen.sh` (선택)
 **용도**: 마스터 이미지를 dd 로 새 DOM 에 복제 후 UUID 재생성 + GRUB 재빌드.
+
+**필요 여부 — 대부분 불필요**:
+dd 클론은 UUID 가 마스터와 동일한 채로도 단독 부팅·운영 정상. 다음 케이스에서만 권장:
+- 마스터 SSD 와 클론 SSD 가 **같은 시스템에 동시 연결** 될 가능성 (진단/복구 등) → UUID 충돌 방지
+- 외부 도구가 UUID 키로 자산/인벤토리 추적 (일반 NVR 배포에는 해당 없음)
+- 여러 클론끼리 SSD 교환 가능성
+
 ```bash
 post-dd-uuid-regen.sh
 ```
 복제 직후 1회만 실행. 모든 파티션 UUID 새로 생성, `slot-uuids.conf` / fstab / grub.cfg / EFI 갱신.
+
+**각 DOM 이 자기 NVR 에서 단독 동작 + 마스터 SSD 는 보관용**: 생략 가능.
 
 ---
 
@@ -141,8 +150,8 @@ reboot
 ### 마스터 이미지 복제로 새 DOM 만들기
 ```bash
 # 마스터에서 dd 로 이미지 추출 (별도 도구)
-# 새 DOM 에 dd 로 복원
-# 새 DOM 부팅 후 1회:
+# 새 DOM 에 dd 로 복원 → 부팅 → 끝 (대부분 케이스에서 추가 작업 불필요)
+# (선택) 마스터와 동시 연결 가능성 있는 환경이면:
 post-dd-uuid-regen.sh
 ```
 
