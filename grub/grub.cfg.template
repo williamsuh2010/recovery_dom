@@ -52,6 +52,6 @@ elif [ "${boot_try}" = "HALT" ]; then
     sleep 999999
 fi
 
-linux /vmlinuz-linux root=UUID=${root_uuid} rw panic=10
+linux /vmlinuz-linux root=UUID=${root_uuid} rw panic=10 fsck.repair=yes
 initrd /intel-ucode.img /initramfs-linux.img
 boot

@@ -152,7 +152,7 @@ elif [ "\$boot_try" = "HALT" ] ; then
     sleep 999999
 fi
 
-linux /vmlinuz-linux root=UUID=\$root_uuid rw panic=10 systemd.setenv=SYSTEMD_SECCOMP=0
+linux /vmlinuz-linux root=UUID=\$root_uuid rw panic=10 systemd.setenv=SYSTEMD_SECCOMP=0 fsck.repair=yes
 initrd /intel-ucode.img /initramfs-linux.img
 boot
 EOF
