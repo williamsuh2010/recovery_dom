@@ -218,16 +218,19 @@ mkdir -p /tmp/boot_mnt
 mount "$PART_BOOT_A" /tmp/boot_mnt
 mkdir -p /tmp/boot_mnt/grub
 cp /tmp/grub.cfg /tmp/boot_mnt/grub/grub.cfg
-# Re-initialize grubenv
+# Re-initialize grubenv.
+# boot_ok=1: admin 이 본 스크립트를 명시 호출 → 현재 슬롯이 known-good 상태로 인정.
+# 다음 reboot 시 GRUB 가 슬롯 advance 하지 않고 동일 슬롯 유지.
+# (configure.sh 의 install 직후 마킹과 동일 시맨틱)
 grub-editenv /tmp/boot_mnt/grub/grubenv create
-grub-editenv /tmp/boot_mnt/grub/grubenv set boot_try=A boot_ok=0 retry_round=0
+grub-editenv /tmp/boot_mnt/grub/grubenv set boot_try=A boot_ok=1 retry_round=0
 umount /tmp/boot_mnt
 
 mount "$PART_BOOT_B" /tmp/boot_mnt
 mkdir -p /tmp/boot_mnt/grub
 cp /tmp/grub.cfg /tmp/boot_mnt/grub/grub.cfg
 grub-editenv /tmp/boot_mnt/grub/grubenv create
-grub-editenv /tmp/boot_mnt/grub/grubenv set boot_try=A boot_ok=0 retry_round=0
+grub-editenv /tmp/boot_mnt/grub/grubenv set boot_try=A boot_ok=1 retry_round=0
 umount /tmp/boot_mnt
 
 # ── Update fstab and slot-uuids.conf in all root partitions ──
