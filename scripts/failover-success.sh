@@ -15,6 +15,7 @@ FAILOVER_LOG="/var/log/failover.log"
 HEALTH_CHECK_PID_WAIT=600
 HEALTH_CHECK_SAMPLE_INTERVAL=30
 HEALTH_CHECK_MAX_DISTINCT_PIDS=3
+INSTALL_FLAG="/etc/recovery/install_mode"
 MAINTENANCE_FLAG="/etc/recovery/maintenance_mode"
 MAX_MAINTENANCE_HOURS=24
 
@@ -28,6 +29,15 @@ mark_boot_ok_and_sync_d() {
     # D 슬롯 전체 동기화 (DNVR 업그레이드 후에만 작동, 플래그 기반)
     /usr/local/sbin/upgrade-sync-d.sh
 }
+
+# Install mode: Phase 3 가 자동 생성, finalize-install.sh 가 명시적 제거.
+# 만료 없음 — 운영자가 설치/검증 마치고 finalize 호출 전까지 영구 유지.
+# DNVR 검사 건너뛰고 boot_ok=1 즉시 마킹.
+if [ -f "$INSTALL_FLAG" ]; then
+    echo "$(date '+%Y-%m-%d %H:%M:%S') install mode active — marking boot_ok=1, skipping DNVR check (run finalize-install.sh to enable failover)" >> "$FAILOVER_LOG"
+    mark_boot_ok_and_sync_d
+    exit 0
+fi
 
 # Maintenance mode: 관리자가 enter-maintenance.sh 로 명시한 작업 윈도우.
 # DNVR PID 검사 건너뛰고 boot_ok=1 즉시 마킹 (24h 자동 만료).

@@ -357,6 +357,13 @@ if [ -f /boot/grub/grubenv ]; then
 fi
 umount /boot 2>/dev/null || true
 
+# ── install_mode 플래그 활성화 ──
+# 설치 완료 후 운영자가 DNVR 앱 설치/검증 작업하는 동안 슬롯 페일오버 무력화.
+# 모든 작업 끝나면 운영자가 /usr/local/sbin/finalize-install.sh 실행 → production.
+mkdir -p /etc/recovery
+touch /etc/recovery/install_mode
+info "install_mode flag SET — slot failover DISABLED until 'finalize-install.sh' is run"
+
 # ── Done ──
 info "=========================================="
 info " Phase 3 complete! Installation finished."
@@ -367,11 +374,13 @@ info "   Ctrl+F12 to verify tgtdnvr mount"
 info "   Ready for dd image backup"
 info "   After dd: run post-dd-uuid-regen.sh"
 info " "
-info " IMPORTANT — manual app install workflow:"
-info "   If you install DNVR app manually before failover-success completes"
-info "   (~20min after boot), run before reboot:"
-info "     /usr/local/sbin/mark-installed.sh"
-info "   Otherwise GRUB will advance to next slot on reboot."
+info " ==========================================="
+info "  INSTALL MODE ACTIVE — slot failover OFF"
+info " ==========================================="
+info "  Install/test DNVR app freely. Reboots are safe (no slot advance)."
+info "  When all setup work is complete, run:"
+info "    /usr/local/sbin/finalize-install.sh"
+info "  This switches to production (enables slot failover protection)."
 info "=========================================="
 
 beep -f 1500 -l 500 2>/dev/null || true
