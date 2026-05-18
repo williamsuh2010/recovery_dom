@@ -352,8 +352,8 @@ fi
 # 부팅 시 GRUB이 boot_ok=0으로 리셋 → DNVR 정상이면 failover-success가 1로 복원
 mount /boot 2>/dev/null || true
 if [ -f /boot/grub/grubenv ]; then
-    grub-editenv /boot/grub/grubenv set boot_try=A boot_ok=1 retry_round=0
-    info "grubenv: boot_try=A, boot_ok=1 (first boot will stay on slot A)"
+    grub-editenv /boot/grub/grubenv set boot_try=A boot_ok=1 retry_round=0 boot_attempts=0
+    info "grubenv: boot_try=A, boot_ok=1, boot_attempts=0 (first boot stays on A)"
 fi
 umount /boot 2>/dev/null || true
 

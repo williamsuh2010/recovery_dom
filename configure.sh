@@ -113,9 +113,17 @@ cat > /boot/grub/grub.cfg <<'GRUBEOF'
 set boot_try=A
 set boot_ok=0
 set retry_round=0
+set boot_attempts=0
 load_env -f /grub/grubenv
 
-if [ "$boot_ok" != "1" ] ; then
+# 슬롯 advance 정책:
+# boot_ok=1 (직전 boot 성공) → attempts 리셋, advance 없음
+# 그 외 (직전 boot 미확인) → attempts 증가. 누적 4회째 실패에서만 advance.
+# → 정전·전원 토글 3회 연속까지는 같은 슬롯 유지 (오탐 advance 방지).
+if [ "$boot_ok" = "1" ] ; then
+    set boot_attempts=0
+elif [ "$boot_attempts" = "3" ] ; then
+    # 4번째 연속 실패 → advance
     if [ "$boot_try" = "A" ] ; then
         set boot_try=B
     elif [ "$boot_try" = "B" ] ; then
@@ -130,10 +138,17 @@ if [ "$boot_ok" != "1" ] ; then
             set boot_try=HALT
         fi
     fi
+    set boot_attempts=0
+elif [ "$boot_attempts" = "2" ] ; then
+    set boot_attempts=3
+elif [ "$boot_attempts" = "1" ] ; then
+    set boot_attempts=2
+else
+    set boot_attempts=1
 fi
 
 set boot_ok=0
-save_env -f /grub/grubenv boot_try boot_ok retry_round
+save_env -f /grub/grubenv boot_try boot_ok retry_round boot_attempts
 
 GRUBEOF
 
@@ -160,7 +175,7 @@ EOF
 # ── Initialize grubenv ──
 info "Initializing grubenv..."
 grub-editenv /boot/grub/grubenv create
-grub-editenv /boot/grub/grubenv set boot_try=A boot_ok=1 retry_round=0
+grub-editenv /boot/grub/grubenv set boot_try=A boot_ok=1 retry_round=0 boot_attempts=0
 
 # ── Register UEFI boot entries ──
 info "Registering UEFI boot entries..."

@@ -21,7 +21,8 @@ MAX_MAINTENANCE_HOURS=24
 
 mark_boot_ok_and_sync_d() {
     mount /boot 2>/dev/null || mount "$(grep '/boot' /etc/fstab | awk '{print $1}' | head -1)" /boot
-    grub-editenv /boot/grub/grubenv set boot_ok=1 retry_round=0
+    # boot_attempts=0 도 같이 리셋 — 다음 GRUB run 이 정전 카운터 리셋된 상태로 시작
+    grub-editenv /boot/grub/grubenv set boot_ok=1 retry_round=0 boot_attempts=0
     umount /boot
     # config 빠른 propagation (작은 파일들 atomic 복사) — boot_ok 마킹 시점의
     # 최신 설정을 B/C/D 에 즉시 push. 슬롯 전환 시 설정 손실 최소화.

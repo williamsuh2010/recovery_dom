@@ -21,7 +21,7 @@ FAILOVER_LOG="/var/log/failover.log"
 # /boot 마운트 (noauto이므로 수동 마운트 필요)
 mount /boot 2>/dev/null || mount "$(grep '/boot' /etc/fstab | awk '{print $1}' | head -1)" /boot
 
-grub-editenv /boot/grub/grubenv set boot_ok=1 retry_round=0
+grub-editenv /boot/grub/grubenv set boot_ok=1 retry_round=0 boot_attempts=0
 
 umount /boot
 

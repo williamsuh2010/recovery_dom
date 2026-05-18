@@ -166,8 +166,14 @@ fi
 if [ -z "${retry_round}" ]; then
     set retry_round=0
 fi
+if [ -z "${boot_attempts}" ]; then
+    set boot_attempts=0
+fi
 
-if [ "${boot_ok}" != "1" ]; then
+# 슬롯 advance 정책: 누적 4회 연속 실패에서만 advance (정전 3회 연속 허용).
+if [ "${boot_ok}" = "1" ]; then
+    set boot_attempts=0
+elif [ "${boot_attempts}" = "3" ]; then
     if [ "${boot_try}" = "A" ]; then set boot_try=B;
     elif [ "${boot_try}" = "B" ]; then set boot_try=C;
     elif [ "${boot_try}" = "C" ]; then set boot_try=D;
@@ -179,10 +185,17 @@ if [ "${boot_ok}" != "1" ]; then
             set boot_try=HALT
         fi
     fi
+    set boot_attempts=0
+elif [ "${boot_attempts}" = "2" ]; then
+    set boot_attempts=3
+elif [ "${boot_attempts}" = "1" ]; then
+    set boot_attempts=2
+else
+    set boot_attempts=1
 fi
 
 set boot_ok=0
-save_env boot_try boot_ok retry_round
+save_env boot_try boot_ok retry_round boot_attempts
 
 GRUBEOF
 
@@ -223,14 +236,14 @@ cp /tmp/grub.cfg /tmp/boot_mnt/grub/grub.cfg
 # 다음 reboot 시 GRUB 가 슬롯 advance 하지 않고 동일 슬롯 유지.
 # (configure.sh 의 install 직후 마킹과 동일 시맨틱)
 grub-editenv /tmp/boot_mnt/grub/grubenv create
-grub-editenv /tmp/boot_mnt/grub/grubenv set boot_try=A boot_ok=1 retry_round=0
+grub-editenv /tmp/boot_mnt/grub/grubenv set boot_try=A boot_ok=1 retry_round=0 boot_attempts=0
 umount /tmp/boot_mnt
 
 mount "$PART_BOOT_B" /tmp/boot_mnt
 mkdir -p /tmp/boot_mnt/grub
 cp /tmp/grub.cfg /tmp/boot_mnt/grub/grub.cfg
 grub-editenv /tmp/boot_mnt/grub/grubenv create
-grub-editenv /tmp/boot_mnt/grub/grubenv set boot_try=A boot_ok=1 retry_round=0
+grub-editenv /tmp/boot_mnt/grub/grubenv set boot_try=A boot_ok=1 retry_round=0 boot_attempts=0
 umount /tmp/boot_mnt
 
 # ── Update fstab and slot-uuids.conf in all root partitions ──

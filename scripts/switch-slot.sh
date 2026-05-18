@@ -18,7 +18,7 @@ mount /boot 2>/dev/null || mount "$(grep '/boot' /etc/fstab | awk '{print $1}' |
 # boot_ok=1 필수 — GRUB 의 advance 로직이 boot_ok != 1 시 다음 슬롯으로 자동 전진하므로,
 # 사용자가 지정한 슬롯으로 정확히 부팅되게 하려면 boot_ok=1 로 명시 (advance 우회).
 # 부팅 후 GRUB 가 boot_ok=0 으로 리셋하므로 한 번만 보호됨 (다음 reboot 부터는 정상 페일오버 로직).
-grub-editenv /boot/grub/grubenv set boot_try="$SLOT" boot_ok=1 retry_round=0
+grub-editenv /boot/grub/grubenv set boot_try="$SLOT" boot_ok=1 retry_round=0 boot_attempts=0
 
 umount /boot
 
