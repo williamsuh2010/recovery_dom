@@ -1,10 +1,14 @@
 #!/bin/bash
 # Health check + boot_ok 마킹
-# failover-success.service에 의해 실행 (10분 sleep 후)
-# 1. DNVR PID 확인
-# 2. 10분 동안 30초 간격 sampling → distinct PID 가짓수 + empty sample 카운트
-# 3. 가짓수 ≤ 임계 (합법 재시작 허용) + 끝 시점 alive → boot_ok=1
-# 4. D 슬롯 동기화 플래그 확인
+# failover-success.service 가 multi-user.target 직후 즉시 실행
+# (sleep 600 은 service 에서 제거됨 → flag 검사 즉시 동작).
+#
+# 흐름:
+# 1. install_mode flag 검사 (있으면 즉시 boot_ok=1 마킹 후 종료)
+# 2. maintenance_mode flag 검사 (있으면 즉시 boot_ok=1, 24h 자동 만료)
+# 3. flag 없음 (production) → sleep 600 (DNVR 초기화 대기)
+# 4. DNVR PID sampling 10분 (30초 간격 × 20회) → distinct PID 가짓수 + alive 검증
+# 5. 통과 시 boot_ok=1 마킹 + D 슬롯 동기화 플래그 확인
 #
 # 사용자 트리거 재시작 (설정 변경 등) 은 PID 가 1~2회 바뀌는 정도라 통과.
 # 크래시 루프는 가짓수 임계 넘어 실패. 임계값은 운영 데이터로 추후 튜닝.
